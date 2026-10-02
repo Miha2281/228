@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Алгоритм эскалации спортивных заявок</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#17202a}
+.wrap{max-width:760px;margin:auto;padding:20px}
+.header{background:#17202a;color:white;border-radius:20px;padding:24px;margin-bottom:16px}
+h1{font-size:25px;margin:0 0 8px}.sub{opacity:.8}
+.progress{height:8px;background:#dfe4e8;border-radius:8px;margin:16px 0 4px;overflow:hidden}.bar{height:100%;width:0;background:#36a269;transition:.2s}
+.counter{font-size:13px;opacity:.8}
+.card{background:white;border-radius:16px;margin:10px 0;box-shadow:0 2px 10px #0000000d;overflow:hidden}
+.step{width:100%;border:0;background:white;padding:18px;text-align:left;display:flex;gap:14px;align-items:center;cursor:pointer}
+.num{min-width:34px;height:34px;border-radius:50%;background:#e9eef2;display:grid;place-items:center;font-weight:bold}
+.card.done .num{background:#36a269;color:white}.title{font-weight:700;font-size:16px}.arrow{margin-left:auto;font-size:20px;color:#7b8790}
+.body{display:none;padding:0 18px 18px 66px;line-height:1.5;color:#4b5560}.card.open .body{display:block}
+.actions{display:flex;gap:10px;margin-top:18px}.btn{border:0;border-radius:12px;padding:12px 16px;cursor:pointer;font-weight:700}.reset{background:#e9eef2}
+.note{background:#fff8df;border-radius:14px;padding:14px;margin-top:16px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>🏆 Эскалация спортивной заявки</h1>
+    <div class="sub">Zendesk → JSM → контроль заявки</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="counter" id="counter">0 из 8 шагов выполнено</div>
+  </div>
+
+  <div id="steps"></div>
+
+  <div class="note">💡 После передачи заявки не забывайте отслеживать её в JSM в разделе <b>All Requests</b> или <b>Requests</b>.</div>
+  <div class="actions"><button class="btn reset" onclick="resetAll()">↻ Сбросить отметки</button></div>
+</div>
+
+<script>
+const steps=[
+["Принять чат","Примите обращение пользователя в Zendesk."],
+["Указать L2","В форме заявки укажите, что обращение передаётся на L2."],
+["Выбрать тему «Ставка»","В поле «Тема» выберите значение «Ставка»."],
+["Заполнить форму","Заполните появившуюся страницу/форму всей необходимой информацией по заявке."],
+["Указать эскалацию","В разделе «Нужна ли эскалация» выберите «Эскалирован». В поле «Сводка эскалации» укажите причину эскалации."],
+["Заполнить описание","В поле «Описание» подробно укажите причину, по которой заявку необходимо передать в JSM."],
+["Проверить и передать","Проверьте корректность всех данных и выберите статус «Эскалирован на L3»."],
+["Отслеживать в JSM","После передачи отслеживайте заявку в JSM в разделе «All Requests» или «Requests»."]
+];
+
+const root=document.getElementById("steps");
+let state=JSON.parse(localStorage.getItem("sportsEscalation")||"[]");
+
+function render(){
+ root.innerHTML=steps.map((s,i)=>`
+ <div class="card ${state[i]?'done':''}" id="c${i}">
+   <button class="step" onclick="toggle(${i})">
+     <span class="num">${state[i]?'✓':i+1}</span>
+     <span class="title">${s[0]}</span>
+     <span class="arrow">›</span>
+   </button>
+   <div class="body">${s[1]}<br><br>
+     <button class="btn" onclick="event.stopPropagation();complete(${i})">${state[i]?'✓ Выполнено':'Отметить выполненным'}</button>
+   </div>
+ </div>`).join("");
+ update();
+}
+function toggle(i){document.getElementById("c"+i).classList.toggle("open")}
+function complete(i){state[i]=!state[i];localStorage.setItem("sportsEscalation",JSON.stringify(state));render();document.getElementById("c"+i).classList.add("open")}
+function resetAll(){state=[];localStorage.removeItem("sportsEscalation");render()}
+function update(){
+ let n=state.filter(Boolean).length;
+ document.getElementById("counter").textContent=`${n} из ${steps.length} шагов выполнено`;
+ document.getElementById("bar").style.width=(n/steps.length*100)+"%";
+}
+render();
+</script>
+</body>
+</html>
